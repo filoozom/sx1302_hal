@@ -15,8 +15,6 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 /* -------------------------------------------------------------------------- */
 /* --- DEPENDANCIES --------------------------------------------------------- */
 
-#define _GNU_SOURCE     /* needed for qsort_r to be defined */
-#include <stdlib.h>     /* qsort_r */
 #include <stdio.h>      /* printf, fprintf, snprintf, fopen, fputs */
 #include <string.h>     /* memset, memcpy */
 #include <pthread.h>
@@ -25,6 +23,7 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 
 #include "trace.h"
 #include "jitqueue.h"
+#include "sort_r.h"
 
 /* -------------------------------------------------------------------------- */
 /* --- PRIVATE MACROS ------------------------------------------------------- */
@@ -114,7 +113,7 @@ void jit_sort_queue(struct jit_queue_s *queue) {
     }
 
     MSG_DEBUG(DEBUG_JIT, "sorting queue in ascending order packet timestamp - queue size:%u\n", queue->num_pkt);
-    qsort_r(queue->nodes, queue->num_pkt, sizeof(queue->nodes[0]), compare, &counter);
+    sort_r(queue->nodes, queue->num_pkt, sizeof(queue->nodes[0]), compare, &counter);
     MSG_DEBUG(DEBUG_JIT, "sorting queue done - swapped:%d\n", counter);
 }
 
