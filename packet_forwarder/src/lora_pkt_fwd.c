@@ -36,7 +36,7 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 #include <time.h>           /* time, clock_gettime, strftime, gmtime */
 #include <sys/time.h>       /* timeval */
 #include <unistd.h>         /* getopt, access */
-#include <stdlib.h>         /* atoi, exit */
+#include <stdlib.h>         /* atoi, exit, getenv */
 #include <errno.h>          /* error messages */
 #include <math.h>           /* modf */
 
@@ -791,7 +791,10 @@ static int parse_gateway_configuration(const char * conf_file) {
     }
 
     /* server hostname or IP address (optional) */
-    str = json_object_get_string(conf_obj, "server_address");
+    str = getenv("SERVER_ADDRESS");
+    if (str == NULL) {
+        str = json_object_get_string(conf_obj, "server_address");
+    }
     if (str != NULL) {
         strncpy(serv_addr, str, sizeof serv_addr);
         serv_addr[sizeof serv_addr - 1] = '\0'; /* ensure string termination */
@@ -799,15 +802,32 @@ static int parse_gateway_configuration(const char * conf_file) {
     }
 
     /* get up and down ports (optional) */
-    val = json_object_get_value(conf_obj, "serv_port_up");
-    if (val != NULL) {
-        snprintf(serv_port_up, sizeof serv_port_up, "%u", (uint16_t)json_value_get_number(val));
+    str = getenv("SERVER_PORT_UP");
+    if (str != NULL) {
+        strncpy(serv_port_up, str, sizeof serv_port_up);
+        serv_port_up[sizeof serv_port_up - 1] = '\0'; /* ensure string termination */
         MSG("INFO: upstream port is configured to \"%s\"\n", serv_port_up);
     }
-    val = json_object_get_value(conf_obj, "serv_port_down");
-    if (val != NULL) {
-        snprintf(serv_port_down, sizeof serv_port_down, "%u", (uint16_t)json_value_get_number(val));
+    else {
+        val = json_object_get_value(conf_obj, "serv_port_up");
+        if (val != NULL) {
+            snprintf(serv_port_up, sizeof serv_port_up, "%u", (uint16_t)json_value_get_number(val));
+            MSG("INFO: upstream port is configured to \"%s\"\n", serv_port_up);
+        }
+    }
+
+    str = getenv("SERVER_PORT_DOWN");
+    if (str != NULL) {
+        strncpy(serv_port_down, str, sizeof serv_port_down);
+        serv_port_down[sizeof serv_port_down - 1] = '\0'; /* ensure string termination */
         MSG("INFO: downstream port is configured to \"%s\"\n", serv_port_down);
+    }
+    else {
+        val = json_object_get_value(conf_obj, "serv_port_down");
+        if (val != NULL) {
+            snprintf(serv_port_down, sizeof serv_port_down, "%u", (uint16_t)json_value_get_number(val));
+            MSG("INFO: downstream port is configured to \"%s\"\n", serv_port_down);
+        }
     }
 
     /* get keep-alive interval (in seconds) for downstream (optional) */
